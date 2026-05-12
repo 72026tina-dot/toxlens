@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>毒素透鏡 ToxLens — 今日健康風險儀表板</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600;700&family=DM+Mono:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0D0F0E;
+  --bg2: #141716;
+  --bg3: #1C1F1D;
+  --border: #2A2E2C;
+  --border2: #353A37;
+  --text: #E8EDE9;
+  --text2: #8A9488;
+  --text3: #556052;
+  --green: #4AE584;
+  --green-dim: #1A3D26;
+  --yellow: #F0C040;
+  --yellow-dim: #3A2E08;
+  --orange: #F07040;
+  --orange-dim: #3A1A08;
+  --red: #F04060;
+  --red-dim: #3A0A14;
+  --blue: #40A0F0;
+  --blue-dim: #0A1F3A;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif TC', serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(13,15,14,0.92);
+  backdrop-filter: blur(12px);
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.logo-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.5; transform:scale(0.8); }
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.demo-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.date-display {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text2);
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  background: var(--bg2);
+}
+
+.tab {
+  padding: 0.9rem 1.5rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* ── LAYOUT ── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* ── SECTION ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── TODAY SCORE HERO ── */
+.today-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.hero-cell {
+  background: var(--bg2);
+  padding: 1.75rem 2rem;
+  position: relative;
+}
+
+.hero-cell-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 0.75rem;
+}
+
+.hero-score {
+  font-family: 'Syne', sans-serif;
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.4rem;
+  transition: color 0.5s;
+}
+
+.hero-score-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text2);
+}
+
+.hero-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 500;
+}
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.sec-label::after {
+  content:'';
+  flex:1;
+  height:1px;
+  background: var(--border);
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.5rem;
+}
+
+.card + .card { margin-top: 1rem; }
+
+/* ── GRID ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+/* ── INPUT CONTROLS ── */
+.field { margin-bottom: 1.25rem; }
+.field:last-child { margin-bottom: 0; }
+
+.field label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 0.5rem;
+}
+
+.field select,
+.field input[type="number"] {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 0.65rem 0.9rem;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.2s;
+  appearance: none;
+}
+
+.field select:focus,
+.field input:focus { border-color: var(--green); }
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.field input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 3px;
+  background: var(--border2);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.field input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  background: var(--green);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--green);
+}
+
+.slider-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--green);
+  min-width: 60px;
+  text-align: right;
+}
+
+/* ── TRANSPORT CHIPS ── */
+.transport-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.transport-chip {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.transport-chip:hover { border-color: var(--green); }
+
+.transport-chip.active {
+  background: var(--green-dim);
+  border-color: var(--green);
+}
+
+.transport-icon { font-size: 1.4rem; display: block; margin-bottom: 0.3rem; }
+.transport-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text2);
+  letter-spacing: 0.05em;
+}
+
+/* ── PROGRESS BARS ── */
+.risk-item {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.risk-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+.risk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.risk-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.risk-pct {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.risk-bar-bg {
+  height: 5px;
+  background: var(--bg3);
+  border-radius: 3px;
+  overflow: visible;
+  position: relative;
+  margin-bottom: 0.4rem;
+}
+
+.risk-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.9s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+
+.risk-bar-fill::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: inherit;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.risk-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text3);
+  line-height: 1.5;
+}
+
+/* ── AQI GAUGE ── */
+.aqi-display {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.5rem;
+  background: var(--bg3);
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}
+
+.aqi-number {
+  font-family: 'Syne', sans-serif;
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1;
+  transition: color 0.5s;
+}
+
+.aqi-info { flex: 1; }
+
+.aqi-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.aqi-desc {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+.aqi-bar-wrap {
+  margin-top: 1rem;
+}
+
+.aqi-spectrum {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #4AE584, #F0C040, #F07040, #F04060, #8B0000);
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.aqi-marker {
+  position: absolute;
+  top: -4px;
+  width: 16px; height: 16px;
+  background: white;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(255,255,255,0.5);
+  transition: left 0.9s cubic-bezier(0.4,0,0.2,1);
+}
+
+.aqi-scale {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.55rem;
+  color: var(--text3);
+}
+
+/* ── POLLUTANT MINI CARDS ── */
+.pollutant-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.pollutant-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1rem;
+  transition: border-color 0.3s;
+}
+
+.pollutant-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.pollutant-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.2rem;
+}
+
+.pollutant-unit {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text3);
+}
+
+/* ── EXPOSURE CALC ── */
+.exposure-result {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.exposure-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 1rem;
+}
+
+.exposure-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.exposure-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  transition: color 0.4s;
+}
+
+.exposure-unit {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text2);
+}
+
+.exposure-compare {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+/* ── FOOD SECTION ── */
+.food-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.food-chip {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  background: var(--bg3);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text2);
+}
+
+.food-chip:hover { border-color: var(--green); color: var(--text); }
+.food-chip.active { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+
+/* ── TOTAL BUDGET TABLE ── */
+.budget-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.budget-table tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.budget-table tr:last-child { border-bottom: none; }
+
+.budget-table td {
+  padding: 0.9rem 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.budget-table td:first-child { color: var(--text2); width: 30%; }
+.budget-table td:nth-child(2) { width: 40%; }
+.budget-table td:last-child { text-align: right; }
+
+.budget-bar-inline {
+  height: 4px;
+  background: var(--bg3);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.3rem;
+}
+
+.budget-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.8s ease;
+}
+
+/* ── WARNING BOX ── */
+.warning-box {
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.warning-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.1rem; }
+.warning-text { font-family: 'DM Mono', monospace; font-size: 0.72rem; line-height: 1.6; }
+
+/* ── STATION INFO ── */
+.station-info {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text3);
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--border);
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--yellow);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(12px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.fade-up { animation: fadeUp 0.4s ease forwards; }
+.fade-up-2 { animation: fadeUp 0.4s 0.1s ease forwards; opacity:0; }
+.fade-up-3 { animation: fadeUp 0.4s 0.2s ease forwards; opacity:0; }
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text3);
+  text-align: center;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid var(--border);
+  line-height: 1.8;
+}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  .container { padding: 1rem; }
+  .today-hero { grid-template-columns: 1fr; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .pollutant-grid { grid-template-columns: repeat(2,1fr); }
+  .transport-grid { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    毒素透鏡 <span style="color:var(--text3);font-weight:400;font-size:0.9rem">ToxLens</span>
+  </div>
+  <div class="header-right">
+    <div class="demo-badge">MVP 示意版本</div>
+    <div class="date-display" id="dateDisplay"></div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('dashboard')">今日總覽</div>
+  <div class="tab" onclick="switchTab('air')">🌫 空氣暴露</div>
+  <div class="tab" onclick="switchTab('food')">🍱 飲食風險</div>
+  <div class="tab" onclick="switchTab('profile')">👤 個人設定</div>
+</div>
+
+<!-- ════════════════════════════════════
+     TAB 1: DASHBOARD
+════════════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+<div class="container">
+
+  <!-- TODAY HERO SCORES -->
+  <div class="today-hero fade-up">
+    <div class="hero-cell">
+      <div class="hero-cell-label">今日綜合風險</div>
+      <div class="hero-score" id="total-score" style="color:var(--yellow)">--</div>
+      <div class="hero-score-sub">/ 100 分</div>
+      <div class="hero-verdict" id="total-verdict" style="background:var(--yellow-dim);color:var(--yellow)">
+        計算中...
+      </div>
+    </div>
+    <div class="hero-cell">
+      <div class="hero-cell-label">空氣暴露指數</div>
+      <div class="hero-score" id="air-score" style="color:var(--green)">--</div>
+      <div class="hero-score-sub">PM2.5 預算已用</div>
+      <div class="hero-verdict" id="air-verdict" style="background:var(--green-dim);color:var(--green)">
+        請設定通勤資訊
+      </div>
+    </div>
+    <div class="hero-cell">
+      <div class="hero-cell-label">飲食風險指數</div>
+      <div class="hero-score" id="food-score" style="color:var(--green)">--</div>
+      <div class="hero-score-sub">最高成分佔比</div>
+      <div class="hero-verdict" id="food-verdict" style="background:var(--green-dim);color:var(--green)">
+        請記錄今日飲食
+      </div>
+    </div>
+  </div>
+
+  <!-- BUDGET TABLE -->
+  <div class="sec-label fade-up-2">今日各項預算消耗</div>
+  <div class="card fade-up-2">
+    <table class="budget-table" id="budgetTable">
+      <tr>
+        <td>PM2.5 吸入</td>
+        <td>
+          <div id="bar-pm25" style="font-size:0.7rem;color:var(--text3)">尚未計算</div>
+          <div class="budget-bar-inline"><div class="budget-bar-fill" id="fill-pm25" style="width:0%;background:var(--green)"></div></div>
+        </td>
+        <td id="pct-pm25" style="color:var(--text3)">—</td>
+      </tr>
+      <tr>
+        <td>鈉攝取</td>
+        <td>
+          <div id="bar-sodium" style="font-size:0.7rem;color:var(--text3)">尚未記錄</div>
+          <div class="budget-bar-inline"><div class="budget-bar-fill" id="fill-sodium" style="width:0%;background:var(--green)"></div></div>
+        </td>
+        <td id="pct-sodium" style="color:var(--text3)">—</td>
+      </tr>
+      <tr>
+        <td>游離糖</td>
+        <td>
+          <div id="bar-sugar" style="font-size:0.7rem;color:var(--text3)">尚未記錄</div>
+          <div class="budget-bar-inline"><div class="budget-bar-fill" id="fill-sugar" style="width:0%;background:var(--green)"></div></div>
+        </td>
+        <td id="pct-sugar" style="color:var(--text3)">—</td>
+      </tr>
+      <tr>
+        <td>磷酸鹽</td>
+        <td>
+          <div id="bar-phosphate" style="font-size:0.7rem;color:var(--text3)">尚未記錄</div>
+          <div class="budget-bar-inline"><div class="budget-bar-fill" id="fill-phosphate" style="width:0%;background:var(--green)"></div></div>
+        </td>
+        <td id="pct-phosphate" style="color:var(--text3)">—</td>
+      </tr>
+      <tr>
+        <td>人工甜味劑</td>
+        <td>
+          <div id="bar-sweetener" style="font-size:0.7rem;color:var(--text3)">尚未記錄</div>
+          <div class="budget-bar-inline"><div class="budget-bar-fill" id="fill-sweetener" style="width:0%;background:var(--green)"></div></div>
+        </td>
+        <td id="pct-sweetener" style="color:var(--text3)">—</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- WARNINGS -->
+  <div style="margin-top:1.5rem" id="warningZone"></div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════
+     TAB 2: AIR
+════════════════════════════════════ -->
+<div class="page" id="page-air">
+<div class="container">
+
+  <div class="grid-2" style="margin-bottom:1.5rem">
+
+    <!-- LEFT: SETTINGS -->
+    <div>
+      <div class="sec-label">通勤設定</div>
+      <div class="card">
+        <div class="field">
+          <label>所在縣市</label>
+          <select id="citySelect" onchange="updateAir()">
+            <option value="taipei">台北市</option>
+            <option value="newtaipei">新北市</option>
+            <option value="taoyuan">桃園市</option>
+            <option value="taichung">台中市</option>
+            <option value="tainan">台南市</option>
+            <option value="kaohsiung">高雄市</option>
+            <option value="hsinchu">新竹市</option>
+            <option value="keelung">基隆市</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>通勤方式</label>
+          <div class="transport-grid">
+            <div class="transport-chip active" onclick="selectTransport('scooter',this)">
+              <span class="transport-icon">🛵</span>
+              <span class="transport-name">機車</span>
+            </div>
+            <div class="transport-chip" onclick="selectTransport('car',this)">
+              <span class="transport-icon">🚗</span>
+              <span class="transport-name">開車</span>
+            </div>
+            <div class="transport-chip" onclick="selectTransport('mrt',this)">
+              <span class="transport-icon">🚇</span>
+              <span class="transport-name">捷運/公車</span>
+            </div>
+            <div class="transport-chip" onclick="selectTransport('walk',this)">
+              <span class="transport-icon">🚶</span>
+              <span class="transport-name">步行/腳踏車</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>戶外通勤時間</label>
+          <div class="slider-row">
+            <input type="range" min="5" max="120" value="30" id="commuteSlider"
+                   oninput="updateCommuteTime(this.value)">
+            <div class="slider-val" id="commuteVal">30 分鐘</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>是否配戴口罩</label>
+          <select id="maskSelect" onchange="updateAir()">
+            <option value="0">未配戴</option>
+            <option value="0.3">一般口罩 (約30%過濾)</option>
+            <option value="0.7">醫用口罩 (約70%過濾)</option>
+            <option value="0.95">N95口罩 (約95%過濾)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: AQI -->
+    <div>
+      <div class="sec-label">即時空氣品質</div>
+      <div class="card">
+        <div class="aqi-display">
+          <div class="aqi-number" id="aqiNumber" style="color:var(--yellow)">87</div>
+          <div class="aqi-info">
+            <div class="aqi-label" id="aqiLabel">普通</div>
+            <div class="aqi-desc" id="aqiDesc">敏感族群應減少長時間戶外活動，一般民眾可正常活動。</div>
+          </div>
+        </div>
+        <div class="aqi-bar-wrap">
+          <div class="aqi-spectrum">
+            <div class="aqi-marker" id="aqiMarker" style="left:30%"></div>
+          </div>
+          <div class="aqi-scale">
+            <span>0 良好</span><span>50</span><span>100 普通</span><span>150</span><span>200+ 危害</span>
+          </div>
+        </div>
+        <div class="station-info">
+          <div class="live-dot"></div>
+          <span id="stationText">示意數據 · App版將串接環境部即時API · 更新時間每小時一次</span>
+        </div>
+      </div>
+
+      <!-- POLLUTANTS -->
+      <div style="margin-top:1rem">
+        <div class="pollutant-grid">
+          <div class="pollutant-card">
+            <div class="pollutant-name">PM2.5</div>
+            <div class="pollutant-val" id="pm25Val" style="color:var(--yellow)">18.4</div>
+            <div class="pollutant-unit">μg/m³</div>
+          </div>
+          <div class="pollutant-card">
+            <div class="pollutant-name">PM10</div>
+            <div class="pollutant-val" id="pm10Val" style="color:var(--green)">32.1</div>
+            <div class="pollutant-unit">μg/m³</div>
+          </div>
+          <div class="pollutant-card">
+            <div class="pollutant-name">NO₂</div>
+            <div class="pollutant-val" id="no2Val" style="color:var(--yellow)">24.5</div>
+            <div class="pollutant-unit">ppb</div>
+          </div>
+          <div class="pollutant-card">
+            <div class="pollutant-name">O₃</div>
+            <div class="pollutant-val" id="o3Val" style="color:var(--green)">38.2</div>
+            <div class="pollutant-unit">ppb</div>
+          </div>
+          <div class="pollutant-card">
+            <div class="pollutant-name">CO</div>
+            <div class="pollutant-val" id="coVal" style="color:var(--green)">0.42</div>
+            <div class="pollutant-unit">ppm</div>
+          </div>
+          <div class="pollutant-card">
+            <div class="pollutant-name">SO₂</div>
+            <div class="pollutant-val" id="so2Val" style="color:var(--green)">2.1</div>
+            <div class="pollutant-unit">ppb</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPOSURE CALCULATION -->
+  <div class="sec-label">個人化暴露量計算</div>
+  <div class="card">
+    <div class="grid-2">
+      <div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem">計算方式</div>
+          <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text2);line-height:1.9" id="calcFormula">
+            PM2.5 濃度 × 呼吸量 × 時間 × (1-口罩效率)<br>
+            = 實際吸入量 (μg)
+          </div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.75rem">通勤方式呼吸量參考</div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--text2);line-height:2">
+          🛵 機車：25 L/min（高強度）<br>
+          🚗 開車：12 L/min（室內，部分過濾）<br>
+          🚇 捷運：12 L/min（室內環境）<br>
+          🚶 步行：15 L/min（輕度活動）
+        </div>
+      </div>
+      <div>
+        <div class="exposure-result">
+          <div class="exposure-title">今日 PM2.5 實際吸入量</div>
+          <div class="exposure-main">
+            <div class="exposure-num" id="exposureNum" style="color:var(--yellow)">0</div>
+            <div class="exposure-unit">μg</div>
+          </div>
+          <div class="exposure-compare" id="exposureCompare">
+            WHO 每日建議上限：15 μg/m³ × 呼吸量<br>
+            請設定通勤資訊以計算暴露量
+          </div>
+        </div>
+
+        <!-- RISK BAR FOR AIR -->
+        <div style="margin-top:1.25rem">
+          <div class="risk-item">
+            <div class="risk-header">
+              <div class="risk-name">PM2.5 日暴露預算</div>
+              <div class="risk-pct" id="pm25RiskPct" style="color:var(--green)">0%</div>
+            </div>
+            <div class="risk-bar-bg">
+              <div class="risk-bar-fill" id="pm25RiskBar" style="width:0%;background:var(--green)"></div>
+            </div>
+            <div class="risk-note" id="pm25RiskNote">尚未計算</div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-header">
+              <div class="risk-name">NO₂ 日暴露預算</div>
+              <div class="risk-pct" id="no2RiskPct" style="color:var(--green)">—</div>
+            </div>
+            <div class="risk-bar-bg">
+              <div class="risk-bar-fill" id="no2RiskBar" style="width:0%;background:var(--green)"></div>
+            </div>
+            <div class="risk-note">WHO 標準：25 μg/m³（日平均）</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════
+     TAB 3: FOOD
+════════════════════════════════════ -->
+<div class="page" id="page-food">
+<div class="container">
+
+  <div class="grid-2">
+    <!-- INPUT -->
+    <div>
+      <div class="sec-label">今日飲食記錄</div>
+      <div class="card">
+        <div class="field">
+          <label>食品類別</label>
+          <select id="foodCat" onchange="updateFoodChips()">
+            <option value="drinks">🧋 手搖飲料</option>
+            <option value="processed">🌭 加工肉品</option>
+            <option value="instant">🍜 即食／泡麵</option>
+            <option value="snacks">🍟 零食點心</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>選擇食品</label>
+          <div class="food-chips" id="foodChips"></div>
+        </div>
+        <div class="field">
+          <label>攝取份量 (g / mL)</label>
+          <div class="slider-row">
+            <input type="range" min="50" max="700" value="250" id="foodServing"
+                   oninput="updateFoodServing(this.value)">
+            <div class="slider-val" id="foodServingVal">250g</div>
+          </div>
+        </div>
+        <button onclick="addFoodLog()"
+          style="width:100%;padding:0.75rem;background:var(--green-dim);border:1px solid var(--green);
+                 border-radius:4px;color:var(--green);font-family:'DM Mono',monospace;
+                 font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;
+                 transition:all 0.15s;"
+          onmouseover="this.style.background='#255A37'"
+          onmouseout="this.style.background='var(--green-dim)'">
+          ＋ 加入今日記錄
+        </button>
+      </div>
+
+      <!-- LOG LIST -->
+      <div style="margin-top:1rem">
+        <div class="sec-label">已記錄（今日）</div>
+        <div id="foodLog" style="display:flex;flex-direction:column;gap:0.5rem">
+          <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text3);
+                      padding:1rem;background:var(--bg2);border:1px dashed var(--border);border-radius:5px;text-align:center">
+            尚未記錄任何食品
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="sec-label">今日飲食風險</div>
+      <div class="card" id="foodRiskCard">
+        <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--text3);text-align:center;padding:2rem 0">
+          選擇食品並加入記錄<br>以查看風險分析
+        </div>
+      </div>
+
+      <div style="margin-top:1rem">
+        <div class="sec-label">今日累積</div>
+        <div class="card" id="cumulativeCard">
+          <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--text3);text-align:center;padding:1rem 0">
+            記錄食品後顯示累積數據
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════
+     TAB 4: PROFILE
+════════════════════════════════════ -->
+<div class="page" id="page-profile">
+<div class="container">
+
+  <div class="grid-2">
+    <div>
+      <div class="sec-label">基礎生理資訊</div>
+      <div class="card">
+        <div class="field">
+          <label>體重 (kg)</label>
+          <div class="slider-row">
+            <input type="range" min="30" max="120" value="60" id="profileWeight"
+                   oninput="updateProfile()">
+            <div class="slider-val" id="profileWeightVal">60 kg</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>身高 (cm)</label>
+          <div class="slider-row">
+            <input type="range" min="140" max="200" value="165" id="profileHeight"
+                   oninput="updateProfile()">
+            <div class="slider-val" id="profileHeightVal">165 cm</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>年齡族群</label>
+          <select id="profileAge" onchange="updateProfile()">
+            <option value="adult">成人 (18-65歲)</option>
+            <option value="child">兒童 (6-17歲)</option>
+            <option value="elder">長者 (65歲以上)</option>
+            <option value="pregnant">孕婦</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>性別</label>
+          <select id="profileGender" onchange="updateProfile()">
+            <option value="male">男性</option>
+            <option value="female">女性</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec-label">敏感體質設定</div>
+      <div class="card">
+        <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--text3);
+                    letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.75rem">
+          勾選適用的狀況（影響各項閾值）
+        </div>
+        <div id="sensitivityList" style="display:flex;flex-direction:column;gap:0.5rem"></div>
+      </div>
+
+      <div style="margin-top:1rem">
+        <div class="sec-label">個人化閾值預覽</div>
+        <div class="card" id="thresholdCard"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer">
+  ⚠️ ToxLens MVP 示意版本 · 空氣品質數據為模擬數值，正式版將串接環境部即時API<br>
+  食品數據來源：衛福部食藥署食品營養成分資料庫 · ADI/TDI 參考 WHO、EFSA、台灣食安法規<br>
+  本工具僅供參考，不構成醫療建議 · 個人實際風險因體質、生活習慣等因素而異
+</div>
+
+<script>
+// ══════════════════════════════════════
+// DATA
+// ══════════════════════════════════════
+
+const CITY_AQI = {
+  taipei:     { aqi:87,  pm25:18.4, pm10:32, no2:24.5, o3:38, co:0.42, so2:2.1 },
+  newtaipei:  { aqi:95,  pm25:22.1, pm10:38, no2:28.2, o3:42, co:0.51, so2:2.8 },
+  taoyuan:    { aqi:112, pm25:31.5, pm10:52, no2:35.1, o3:55, co:0.68, so2:4.2 },
+  taichung:   { aqi:128, pm25:38.2, pm10:65, no2:41.3, o3:62, co:0.82, so2:5.1 },
+  tainan:     { aqi:118, pm25:34.5, pm10:58, no2:37.8, o3:58, co:0.75, so2:4.8 },
+  kaohsiung:  { aqi:135, pm25:41.2, pm10:71, no2:45.2, o3:68, co:0.91, so2:6.3 },
+  hsinchu:    { aqi:78,  pm25:15.2, pm10:28, no2:18.5, o3:32, co:0.35, so2:1.8 },
+  keelung:    { aqi:65,  pm25:12.8, pm10:22, no2:15.2, o3:28, co:0.28, so2:1.4 },
+};
+
+// Breathing rate L/min per transport
+const BREATHING = { scooter:25, car:12, mrt:12, walk:15 };
+
+const FOODS = {
+  drinks: [
+    { id:'bubble',   name:'珍珠奶茶(大)', per100:{ sodium:45, sugar:8500, phosphate:30, sweetener:0,   caffeine:20  }},
+    { id:'greentea', name:'無糖綠茶',     per100:{ sodium:10, sugar:200,  phosphate:5,  sweetener:0,   caffeine:35  }},
+    { id:'taro',     name:'芋頭鮮奶茶',   per100:{ sodium:60, sugar:7200, phosphate:45, sweetener:0,   caffeine:18  }},
+    { id:'zerocalc', name:'無糖可樂',     per100:{ sodium:12, sugar:50,   phosphate:25, sweetener:150, caffeine:40  }},
+    { id:'lemon',    name:'檸檬綠茶',     per100:{ sodium:25, sugar:5500, phosphate:8,  sweetener:0,   caffeine:25  }},
+  ],
+  processed: [
+    { id:'sausage',  name:'台式香腸(2條)', per100:{ sodium:780, sugar:8000, phosphate:120, sweetener:0, caffeine:0 }},
+    { id:'fishball', name:'燕餃魚餃',      per100:{ sodium:650, sugar:2000, phosphate:180, sweetener:0, caffeine:0 }},
+    { id:'ham',      name:'火腿片',        per100:{ sodium:900, sugar:2500, phosphate:90,  sweetener:0, caffeine:0 }},
+    { id:'bacon',    name:'培根',          per100:{ sodium:1100,sugar:1500, phosphate:100, sweetener:0, caffeine:0 }},
+  ],
+  instant: [
+    { id:'ramen',    name:'袋裝泡麵',      per100:{ sodium:1800,sugar:3000, phosphate:80,  sweetener:0, caffeine:0 }},
+    { id:'cup',      name:'杯麵',          per100:{ sodium:2100,sugar:4000, phosphate:90,  sweetener:0, caffeine:0 }},
+    { id:'ricenoodle',name:'即食米粉',     per100:{ sodium:550, sugar:1000, phosphate:30,  sweetener:0, caffeine:0 }},
+  ],
+  snacks: [
+    { id:'chips',    name:'洋芋片',        per100:{ sodium:580, sugar:2500, phosphate:60,  sweetener:0, caffeine:0 }},
+    { id:'cookie',   name:'奶油餅乾',      per100:{ sodium:380, sugar:28000,phosphate:50,  sweetener:0, caffeine:0 }},
+    { id:'jelly',    name:'果凍椰果',      per100:{ sodium:50,  sugar:15000,phosphate:10,  sweetener:80,caffeine:0 }},
+  ],
+};
+
+// ADI in mg per day (for 60kg adult baseline)
+const ADI_BASE = {
+  sodium: 2000, sugar: 50000, phosphate: 4200, sweetener: 3600, caffeine: 400
+};
+
+const ADI_MULTIPLIERS = {
+  adult:1, child:0.6, elder:0.75, pregnant:0.7
+};
+
+const SENSITIVITY_OPTIONS = [
+  { id:'kidney',   label:'腎臟疾病',    effect:{ sodium:0.4, phosphate:0.3 }},
+  { id:'asthma',   label:'氣喘／過敏',  effect:{ pm25:0.5 }},
+  { id:'cardio',   label:'心血管疾病',  effect:{ sodium:0.5, pm25:0.6 }},
+  { id:'diabetes', label:'糖尿病',      effect:{ sugar:0.6, sweetener:0.7 }},
+  { id:'liver',    label:'肝臟疾病',    effect:{ sweetener:0.5 }},
+  { id:'pregnant2',label:'孕婦',        effect:{ caffeine:0.3, sodium:0.7, sweetener:0.6 }},
+];
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let state = {
+  city: 'taipei',
+  transport: 'scooter',
+  commute: 30,
+  mask: 0,
+  weight: 60,
+  height: 165,
+  age: 'adult',
+  gender: 'male',
+  sensitivity: [],
+  foodLog: [],
+  selectedFood: null,
+  foodServing: 250,
+  foodCat: 'drinks',
+};
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+function colorFor(pct) {
+  if (pct >= 80) return 'var(--red)';
+  if (pct >= 60) return 'var(--orange)';
+  if (pct >= 40) return 'var(--yellow)';
+  return 'var(--green)';
+}
+
+function bgFor(pct) {
+  if (pct >= 80) return 'var(--red-dim)';
+  if (pct >= 60) return 'var(--orange-dim)';
+  if (pct >= 40) return 'var(--yellow-dim)';
+  return 'var(--green-dim)';
+}
+
+function verdictFor(pct) {
+  if (pct >= 80) return '🔴 高風險';
+  if (pct >= 60) return '🟠 注意';
+  if (pct >= 40) return '🟡 適量';
+  return '🟢 良好';
+}
+
+function getADI(key) {
+  const base = ADI_BASE[key] || 1000;
+  const ageMult = ADI_MULTIPLIERS[state.age] || 1;
+  const weightMult = state.weight / 60;
+  let sens = 1;
+  state.sensitivity.forEach(sid => {
+    const opt = SENSITIVITY_OPTIONS.find(o => o.id === sid);
+    if (opt && opt.effect[key]) sens = Math.min(sens, opt.effect[key]);
+  });
+  return base * ageMult * weightMult * sens;
+}
+
+function getAQILabel(aqi) {
+  if (aqi <= 50)  return { label:'良好',   desc:'空氣品質佳，各族群皆可正常戶外活動。',         color:'var(--green)' };
+  if (aqi <= 100) return { label:'普通',   desc:'敏感族群應減少長時間戶外活動，一般民眾可正常活動。', color:'var(--yellow)' };
+  if (aqi <= 150) return { label:'對敏感族群不健康', desc:'敏感族群應避免戶外活動，一般民眾減少長時間劇烈戶外活動。', color:'var(--orange)' };
+  if (aqi <= 200) return { label:'對所有族群不健康', desc:'所有人應減少戶外活動，敏感族群應留在室內。', color:'var(--red)' };
+  return { label:'危害', desc:'所有人應避免戶外活動，敏感族群盡量留在室內並減少活動。', color:'var(--red)' };
+}
+
+// ══════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['dashboard','air','food','profile'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+}
+
+// ══════════════════════════════════════
+// AIR MODULE
+// ══════════════════════════════════════
+function selectTransport(type, el) {
+  state.transport = type;
+  document.querySelectorAll('.transport-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  updateAir();
+}
+
+function updateCommuteTime(v) {
+  state.commute = +v;
+  document.getElementById('commuteVal').textContent = v + ' 分鐘';
+  updateAir();
+}
+
+function updateAir() {
+  state.city = document.getElementById('citySelect').value;
+  state.mask = +document.getElementById('maskSelect').value;
+
+  const data = CITY_AQI[state.city];
+
+  // Update AQI display
+  const aqiInfo = getAQILabel(data.aqi);
+  document.getElementById('aqiNumber').textContent = data.aqi;
+  document.getElementById('aqiNumber').style.color = aqiInfo.color;
+  document.getElementById('aqiLabel').textContent = aqiInfo.label;
+  document.getElementById('aqiDesc').textContent = aqiInfo.desc;
+
+  // Marker position (0-200+ mapped to 0-100%)
+  const markerPos = Math.min((data.aqi / 200) * 100, 98);
+  document.getElementById('aqiMarker').style.left = markerPos + '%';
+
+  // Update pollutant cards
+  const pm25Color = data.pm25 > 35 ? 'var(--red)' : data.pm25 > 15 ? 'var(--yellow)' : 'var(--green)';
+  const no2Color  = data.no2  > 40 ? 'var(--orange)' : data.no2 > 25 ? 'var(--yellow)' : 'var(--green)';
+  document.getElementById('pm25Val').textContent = data.pm25;
+  document.getElementById('pm25Val').style.color = pm25Color;
+  document.getElementById('pm10Val').textContent = data.pm10;
+  document.getElementById('no2Val').textContent  = data.no2;
+  document.getElementById('no2Val').style.color  = no2Color;
+  document.getElementById('o3Val').textContent   = data.o3;
+  document.getElementById('coVal').textContent   = data.co;
+  document.getElementById('so2Val').textContent  = data.so2;
+
+  // Exposure calculation
+  const breathRate = BREATHING[state.transport]; // L/min
+  const maskEff = state.mask;
+  const timeMin = state.commute;
+
+  // PM2.5 吸入量 μg = concentration(μg/m³) × breathRate(L/min) × time(min) × (1-mask) × 0.001 (L→m³) × deposition(0.4)
+  const pm25Inhaled = data.pm25 * breathRate * timeMin * (1 - maskEff) * 0.001 * 0.4;
+
+  // WHO reference: 15 μg/m³ daily limit → for 24h avg breathing ~12 L/min
+  // Daily reference dose = 15 × 12 × 1440 × 0.001 × 0.4 ≈ 103 μg
+  let pm25DailyRef = 103 * (state.weight / 60);
+  // Sensitivity
+  state.sensitivity.forEach(sid => {
+    const opt = SENSITIVITY_OPTIONS.find(o => o.id === sid);
+    if (opt && opt.effect['pm25']) pm25DailyRef *= opt.effect['pm25'];
+  });
+
+  const pm25Pct = Math.round((pm25Inhaled / pm25DailyRef) * 100);
+  const pm25Color2 = colorFor(pm25Pct);
+
+  document.getElementById('exposureNum').textContent = pm25Inhaled.toFixed(1);
+  document.getElementById('exposureNum').style.color = pm25Color2;
+  document.getElementById('exposureCompare').innerHTML =
+    `通勤方式：${getTransportName(state.transport)}（${breathRate} L/min）<br>` +
+    `時間：${timeMin} 分鐘 | 口罩效率：${(maskEff*100).toFixed(0)}%<br>` +
+    `個人每日參考上限：${pm25DailyRef.toFixed(0)} μg<br>` +
+    `<strong style="color:${pm25Color2}">已使用 ${pm25Pct}% 日預算</strong>`;
+
+  // Risk bars
+  const cappedPm25 = Math.min(pm25Pct, 100);
+  document.getElementById('pm25RiskPct').textContent = pm25Pct + '%';
+  document.getElementById('pm25RiskPct').style.color = pm25Color2;
+  document.getElementById('pm25RiskBar').style.width = cappedPm25 + '%';
+  document.getElementById('pm25RiskBar').style.background = pm25Color2;
+  document.getElementById('pm25RiskNote').textContent = getRiskNote('pm25', pm25Pct);
+
+  // NO2
+  const no2Pct = Math.round((data.no2 / 25) * 100 * (timeMin / 60));
+  const no2Color2 = colorFor(no2Pct);
+  document.getElementById('no2RiskPct').textContent = no2Pct + '%';
+  document.getElementById('no2RiskPct').style.color = no2Color2;
+  document.getElementById('no2RiskBar').style.width = Math.min(no2Pct,100) + '%';
+  document.getElementById('no2RiskBar').style.background = no2Color2;
+
+  // Update dashboard air score
+  document.getElementById('air-score').textContent = pm25Pct + '%';
+  document.getElementById('air-score').style.color = pm25Color2;
+  document.getElementById('air-verdict').textContent = verdictFor(pm25Pct);
+  document.getElementById('air-verdict').style.background = bgFor(pm25Pct);
+  document.getElementById('air-verdict').style.color = pm25Color2;
+
+  // Update budget table
+  document.getElementById('bar-pm25').textContent = `${pm25Inhaled.toFixed(1)} μg 已吸入`;
+  document.getElementById('fill-pm25').style.width = Math.min(pm25Pct,100) + '%';
+  document.getElementById('fill-pm25').style.background = pm25Color2;
+  document.getElementById('pct-pm25').textContent = pm25Pct + '%';
+  document.getElementById('pct-pm25').style.color = pm25Color2;
+
+  updateTotalScore();
+}
+
+function getTransportName(t) {
+  return { scooter:'機車', car:'開車', mrt:'捷運/公車', walk:'步行' }[t] || t;
+}
+
+function getRiskNote(key, pct) {
+  if (key === 'pm25') {
+    if (pct >= 80) return '⚠️ 嚴重超標！建議配戴N95口罩，減少戶外時間';
+    if (pct >= 60) return '注意：PM2.5偏高，敏感族群應減少戶外活動';
+    if (pct >= 40) return '中等暴露，建議配戴口罩降低吸入量';
+    return '暴露量在安全範圍內';
+  }
+  return pct >= 80 ? '偏高，請注意' : pct >= 50 ? '適量攝取' : '安全範圍';
+}
+
+// ══════════════════════════════════════
+// FOOD MODULE
+// ══════════════════════════════════════
+function updateFoodChips() {
+  state.foodCat = document.getElementById('foodCat').value;
+  const foods = FOODS[state.foodCat];
+  state.selectedFood = foods[0].id;
+
+  const container = document.getElementById('foodChips');
+  container.innerHTML = foods.map(f =>
+    `<div class="food-chip ${f.id === state.selectedFood ? 'active' : ''}"
+          id="fchip_${f.id}" onclick="selectFoodChip('${f.id}')">${f.name}</div>`
+  ).join('');
+}
+
+function selectFoodChip(id) {
+  state.selectedFood = id;
+  document.querySelectorAll('.food-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('fchip_' + id)?.classList.add('active');
+}
+
+function updateFoodServing(v) {
+  state.foodServing = +v;
+  document.getElementById('foodServingVal').textContent = v + 'g';
+}
+
+function addFoodLog() {
+  const allFoods = Object.values(FOODS).flat();
+  const food = allFoods.find(f => f.id === state.selectedFood);
+  if (!food) return;
+
+  state.foodLog.push({
+    ...food,
+    serving: state.foodServing,
+    time: new Date().toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'})
+  });
+
+  renderFoodLog();
+  renderFoodRisk();
+  updateDashboardFood();
+  updateTotalScore();
+}
+
+function removeFoodLog(idx) {
+  state.foodLog.splice(idx, 1);
+  renderFoodLog();
+  renderFoodRisk();
+  updateDashboardFood();
+  updateTotalScore();
+}
+
+function renderFoodLog() {
+  const container = document.getElementById('foodLog');
+  if (state.foodLog.length === 0) {
+    container.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text3);
+      padding:1rem;background:var(--bg2);border:1px dashed var(--border);border-radius:5px;text-align:center">
+      尚未記錄任何食品</div>`;
+    return;
+  }
+
+  container.innerHTML = state.foodLog.map((item, i) => `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+                padding:0.75rem 1rem;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:0.82rem;font-weight:600;margin-bottom:0.2rem">${item.name}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--text3)">
+          ${item.serving}g · ${item.time}
+        </div>
+      </div>
+      <button onclick="removeFoodLog(${i})"
+        style="background:none;border:1px solid var(--border2);border-radius:3px;
+               color:var(--text3);font-family:'DM Mono',monospace;font-size:0.6rem;
+               padding:0.25rem 0.6rem;cursor:pointer">移除</button>
+    </div>`
+  ).join('');
+}
+
+function renderFoodRisk() {
+  if (state.foodLog.length === 0) {
+    document.getElementById('foodRiskCard').innerHTML =
+      `<div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--text3);text-align:center;padding:2rem 0">選擇食品並加入記錄<br>以查看風險分析</div>`;
+    document.getElementById('cumulativeCard').innerHTML =
+      `<div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--text3);text-align:center;padding:1rem 0">記錄食品後顯示累積數據</div>`;
+    return;
+  }
+
+  // Calculate cumulative
+  const totals = { sodium:0, sugar:0, phosphate:0, sweetener:0, caffeine:0 };
+  state.foodLog.forEach(item => {
+    const sf = item.serving / 100;
+    Object.keys(totals).forEach(k => {
+      totals[k] += (item.per100[k] || 0) * sf;
+    });
+  });
+
+  const keys = Object.keys(totals);
+  const labels = { sodium:'鈉', sugar:'游離糖', phosphate:'磷酸鹽', sweetener:'人工甜味劑', caffeine:'咖啡因' };
+  const units  = { sodium:'mg', sugar:'mg', phosphate:'mg', sweetener:'mg', caffeine:'mg' };
+
+  // Risk card: latest item
+  const latest = state.foodLog[state.foodLog.length - 1];
+  const sf = latest.serving / 100;
+  let riskHTML = `<div style="margin-bottom:0.75rem">
+    <div style="font-size:0.85rem;font-weight:600">${latest.name}</div>
+    <div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--text3)">${latest.serving}g 的風險分析</div>
+  </div>`;
+
+  keys.forEach(k => {
+    const intake = (latest.per100[k] || 0) * sf;
+    const adi = getADI(k);
+    const pct = Math.round((intake / adi) * 100);
+    const c = colorFor(pct);
+    riskHTML += `<div class="risk-item">
+      <div class="risk-header">
+        <div class="risk-name">${labels[k]}</div>
+        <div class="risk-pct" style="color:${c}">${pct}%</div>
+      </div>
+      <div class="risk-bar-bg">
+        <div class="risk-bar-fill" style="width:${Math.min(pct,100)}%;background:${c}"></div>
+      </div>
+      <div class="risk-note">${intake.toFixed(1)}${units[k]} / 你的上限 ${adi.toFixed(0)}${units[k]}</div>
+    </div>`;
+  });
+
+  document.getElementById('foodRiskCard').innerHTML = riskHTML;
+
+  // Cumulative card
+  let cumHTML = '';
+  keys.forEach(k => {
+    const adi = getADI(k);
+    const pct = Math.round((totals[k] / adi) * 100);
+    const c = colorFor(pct);
+    const remaining = Math.max(0, adi - totals[k]);
+    cumHTML += `<div class="risk-item">
+      <div class="risk-header">
+        <div class="risk-name">${labels[k]} 今日累積</div>
+        <div class="risk-pct" style="color:${c}">${pct}%</div>
+      </div>
+      <div class="risk-bar-bg">
+        <div class="risk-bar-fill" style="width:${Math.min(pct,100)}%;background:${c}"></div>
+      </div>
+      <div class="risk-note">已攝取 ${totals[k].toFixed(0)}${units[k]}，剩餘額度 ${remaining.toFixed(0)}${units[k]}</div>
+    </div>`;
+  });
+  document.getElementById('cumulativeCard').innerHTML = cumHTML;
+}
+
+function updateDashboardFood() {
+  if (state.foodLog.length === 0) return;
+
+  const totals = { sodium:0, sugar:0, phosphate:0, sweetener:0, caffeine:0 };
+  state.foodLog.forEach(item => {
+    const sf = item.serving / 100;
+    Object.keys(totals).forEach(k => { totals[k] += (item.per100[k] || 0) * sf; });
+  });
+
+  const pcts = Object.keys(totals).map(k => Math.round((totals[k] / getADI(k)) * 100));
+  const maxPct = Math.max(...pcts);
+  const c = colorFor(maxPct);
+
+  document.getElementById('food-score').textContent = maxPct + '%';
+  document.getElementById('food-score').style.color = c;
+  document.getElementById('food-verdict').textContent = verdictFor(maxPct);
+  document.getElementById('food-verdict').style.background = bgFor(maxPct);
+  document.getElementById('food-verdict').style.color = c;
+
+  // Update budget bars
+  const keys = ['sodium','sugar','phosphate','sweetener'];
+  const ids  = ['sodium','sugar','phosphate','sweetener'];
+  const labels = { sodium:'鈉', sugar:'游離糖', phosphate:'磷酸鹽', sweetener:'人工甜味劑' };
+  const units  = { sodium:'mg', sugar:'mg', phosphate:'mg', sweetener:'mg' };
+
+  keys.forEach(k => {
+    const adi = getADI(k);
+    const pct = Math.round((totals[k] / adi) * 100);
+    const cc = colorFor(pct);
+    const el = document.getElementById('bar-' + k);
+    if (el) {
+      el.textContent = `${totals[k].toFixed(0)}${units[k]} 已攝取`;
+      document.getElementById('fill-' + k).style.width = Math.min(pct,100) + '%';
+      document.getElementById('fill-' + k).style.background = cc;
+      document.getElementById('pct-' + k).textContent = pct + '%';
+      document.getElementById('pct-' + k).style.color = cc;
+    }
+  });
+}
+
+// ══════════════════════════════════════
+// PROFILE MODULE
+// ══════════════════════════════════════
+function updateProfile() {
+  state.weight = +document.getElementById('profileWeight').value;
+  state.height = +document.getElementById('profileHeight').value;
+  state.age = document.getElementById('profileAge').value;
+  state.gender = document.getElementById('profileGender').value;
+
+  document.getElementById('profileWeightVal').textContent = state.weight + ' kg';
+  document.getElementById('profileHeightVal').textContent = state.height + ' cm';
+
+  renderThresholds();
+  updateAir();
+  updateDashboardFood();
+}
+
+function toggleSensitivity(id) {
+  const idx = state.sensitivity.indexOf(id);
+  if (idx >= 0) state.sensitivity.splice(idx, 1);
+  else state.sensitivity.push(id);
+  renderSensitivityList();
+  renderThresholds();
+  updateAir();
+}
+
+function renderSensitivityList() {
+  document.getElementById('sensitivityList').innerHTML =
+    SENSITIVITY_OPTIONS.map(opt => {
+      const active = state.sensitivity.includes(opt.id);
+      return `<div onclick="toggleSensitivity('${opt.id}')"
+        style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.9rem;
+               border-radius:4px;cursor:pointer;border:1px solid ${active ? 'var(--yellow)' : 'var(--border)'};
+               background:${active ? 'var(--yellow-dim)' : 'var(--bg3)'};transition:all 0.15s">
+        <div style="width:14px;height:14px;border-radius:3px;border:1.5px solid ${active ? 'var(--yellow)' : 'var(--border2)'};
+                    background:${active ? 'var(--yellow)' : 'transparent'};flex-shrink:0;
+                    display:flex;align-items:center;justify-content:center;font-size:0.6rem">
+          ${active ? '✓' : ''}
+        </div>
+        <span style="font-family:'DM Mono',monospace;font-size:0.72rem;color:${active ? 'var(--yellow)' : 'var(--text2)'}">${opt.label}</span>
+      </div>`;
+    }).join('');
+}
+
+function renderThresholds() {
+  const keys = ['sodium','sugar','phosphate','sweetener','caffeine'];
+  const labels = { sodium:'鈉 (mg/日)', sugar:'游離糖 (mg/日)', phosphate:'磷酸鹽 (mg/日)', sweetener:'甜味劑 (mg/日)', caffeine:'咖啡因 (mg/日)' };
+
+  document.getElementById('thresholdCard').innerHTML = keys.map(k => {
+    const adi = getADI(k);
+    const base = ADI_BASE[k];
+    const diff = Math.round(((adi - base) / base) * 100);
+    const sign = diff >= 0 ? '+' : '';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;
+              padding:0.6rem 0;border-bottom:1px solid var(--border)">
+      <div style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--text2)">${labels[k]}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--green)">${adi.toFixed(0)}
+        <span style="font-size:0.58rem;color:var(--text3)">(${sign}${diff}%)</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+// TOTAL SCORE
+// ══════════════════════════════════════
+function updateTotalScore() {
+  const airEl  = document.getElementById('air-score').textContent;
+  const foodEl = document.getElementById('food-score').textContent;
+  const airPct  = parseInt(airEl)  || 0;
+  const foodPct = parseInt(foodEl) || 0;
+
+  if (airPct === 0 && foodPct === 0) return;
+
+  const total = Math.round(airPct * 0.4 + foodPct * 0.6);
+  const c = colorFor(total);
+
+  document.getElementById('total-score').textContent = total;
+  document.getElementById('total-score').style.color = c;
+  document.getElementById('total-verdict').textContent = verdictFor(total);
+  document.getElementById('total-verdict').style.background = bgFor(total);
+  document.getElementById('total-verdict').style.color = c;
+
+  // Warnings
+  const warnings = [];
+  if (airPct >= 60) warnings.push({ icon:'🌫', text:`今日PM2.5暴露已達${airPct}%日預算，建議配戴口罩或減少戶外活動。`, level: airPct });
+  if (foodPct >= 80) warnings.push({ icon:'⚠️', text:`飲食中某項成分已超過${foodPct}%每日容許量，今日剩餘額度不多，晚餐建議選擇清淡食物。`, level: foodPct });
+
+  const zone = document.getElementById('warningZone');
+  zone.innerHTML = warnings.map(w => {
+    const c2 = colorFor(w.level);
+    const bg = bgFor(w.level);
+    return `<div class="warning-box" style="background:${bg};border:1px solid ${c2};margin-bottom:0.75rem">
+      <div class="warning-icon">${w.icon}</div>
+      <div class="warning-text" style="color:${c2}">${w.text}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+function init() {
+  // Date
+  const now = new Date();
+  document.getElementById('dateDisplay').textContent =
+    now.toLocaleDateString('zh-TW', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+
+  // Food chips
+  updateFoodChips();
+
+  // Sensitivity
+  renderSensitivityList();
+  renderThresholds();
+
+  // Air
+  updateAir();
+}
+
+init();
+</script>
+</body>
+</html>
